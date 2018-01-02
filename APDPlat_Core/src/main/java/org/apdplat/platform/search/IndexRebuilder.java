@@ -22,12 +22,8 @@ package org.apdplat.platform.search;
 
 import org.apdplat.platform.log.APDPlatLogger;
 import org.apdplat.platform.util.ConvertUtils;
-import java.io.File;
 import java.util.Locale;
-import javax.annotation.Resource;
 import org.apdplat.platform.log.APDPlatLoggerFactory;
-import org.compass.gps.CompassGps;
-import org.compass.gps.CompassGpsException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -37,9 +33,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class IndexRebuilder {
     private static final APDPlatLogger LOG = APDPlatLoggerFactory.getAPDPlatLogger(IndexRebuilder.class);
-    
-    @Resource(name = "compassGps")
-    private CompassGps compassGps;
+
 
     /**
      * 同步重建索引
@@ -52,11 +46,6 @@ public class IndexRebuilder {
      */
     public boolean build(){
         try{
-            LOG.info("开始删除索引文件");
-            LOG.info("Start to delete index file", Locale.ENGLISH);
-            delDir(IndexManager.getIndexDir());
-            LOG.info("删除索引文件结束");
-            LOG.info("Finish delete index file", Locale.ENGLISH);
             LOG.info("开始建立索引文件...");
             LOG.info("Start to create index file...", Locale.ENGLISH);
             long beginTime = System.currentTimeMillis();
@@ -66,7 +55,8 @@ public class IndexRebuilder {
             String pre="执行之前剩余内存:"+max+"-"+total+"+"+free+"="+(max-total+free);
             String preEn="Remain memory before execution:"+max+"-"+total+"+"+free+"="+(max-total+free);
 
-            compassGps.index();
+            //在这里重建索引
+            //.........
 
             long costTime = System.currentTimeMillis() - beginTime;
             max=(float)Runtime.getRuntime().maxMemory()/1000000;
@@ -82,25 +72,11 @@ public class IndexRebuilder {
             LOG.info(preEn, Locale.ENGLISH);
             LOG.info(post);
             LOG.info(postEn, Locale.ENGLISH);
-        }catch(CompassGpsException | IllegalStateException e){
+        }catch(Exception e){
             LOG.error("建立索引出错", e);
             LOG.error("Failed in building index", e, Locale.ENGLISH);
             return false;
         }
         return true;
-    }
-    private void delDir(File file){
-        if(file.isFile()){
-            file.delete();
-        }else if(file.isDirectory()){
-            File[] files=file.listFiles();
-            if(files.length==0){
-                file.delete();
-            }else{
-                for(File f : files){
-                    delDir(f);
-                }
-            }
-        }
     }
 }

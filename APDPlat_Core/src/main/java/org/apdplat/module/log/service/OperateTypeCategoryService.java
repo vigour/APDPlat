@@ -32,7 +32,7 @@ import org.springframework.stereotype.Service;
  * @author 杨尚川
  */
 @Service
-public class OperateTyeCategoryService extends CategoryService{
+public class OperateTypeCategoryService extends CategoryService{
     
     public String getXML(List<OperateStatistics> data){
         //创建根元素
@@ -59,10 +59,10 @@ public class OperateTyeCategoryService extends CategoryService{
     }
 
     private void createUserDatasets(List<OperateStatistics> data, Element rootElement) {
-    	for(OperateStatistics item : data){
+        data.forEach(item -> {
             Element dataset = createUserDataset(item);
             rootElement.addContent(dataset);
-        }
+        });
     }
 
     private Element createUserDataset(OperateStatistics data) {

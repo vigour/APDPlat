@@ -26,6 +26,10 @@ import org.apdplat.platform.annotation.ModelAttr;
 import org.apdplat.platform.annotation.ModelAttrRef;
 import org.apdplat.platform.annotation.ModelCollRef;
 import org.apdplat.platform.generator.ActionGenerator;
+import org.apdplat.platform.search.annotations.Index;
+import org.apdplat.platform.search.annotations.Searchable;
+import org.apdplat.platform.search.annotations.SearchableComponent;
+import org.apdplat.platform.search.annotations.SearchableProperty;
 import org.apdplat.platform.service.ServiceFacade;
 import org.apdplat.platform.util.SpringContextUtils;
 import java.util.ArrayList;
@@ -49,7 +53,6 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 import org.apdplat.platform.annotation.Database;
 import org.apdplat.platform.model.SimpleModel;
-import org.compass.annotations.*;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -74,7 +77,7 @@ public class User extends SimpleModel  implements UserDetails{
     protected Org org;
 
     //用户名不分词
-    @SearchableProperty(index=Index.NOT_ANALYZED)
+    @SearchableProperty(index= Index.NOT_ANALYZED)
     @ModelAttr("用户名")
     protected String username;
 
@@ -180,10 +183,10 @@ public class User extends SimpleModel  implements UserDetails{
             return "";
         }
         StringBuilder result=new StringBuilder();
-        for(Role role : this.roles){
+        this.roles.forEach(role -> {
             result.append("role-").append(role.getId()).append(",");
-        }
-        result=result.deleteCharAt(result.length()-1);
+        });
+        result.setLength(result.length()-1);
         return result.toString();
     }
     
@@ -192,10 +195,10 @@ public class User extends SimpleModel  implements UserDetails{
             return "";
         }
         StringBuilder result=new StringBuilder();
-        for(Position position : this.positions){
+        this.positions.forEach(position -> {
             result.append("position-").append(position.getId()).append(",");
-        }
-        result=result.deleteCharAt(result.length()-1);
+        });
+        result.setLength(result.length());
         return result.toString();
     }
     
@@ -204,10 +207,10 @@ public class User extends SimpleModel  implements UserDetails{
             return "";
         }
         StringBuilder result=new StringBuilder();
-        for(UserGroup userGroup : this.userGroups){
+        this.userGroups.forEach(userGroup -> {
             result.append("userGroup-").append(userGroup.getId()).append(",");
-        }
-        result=result.deleteCharAt(result.length()-1);
+        });
+        result.setLength(result.length()-1);
         return result.toString();
     }
 
@@ -235,9 +238,9 @@ public class User extends SimpleModel  implements UserDetails{
                     }
                 }
                 //如果用户不是超级管理员则进行一下处理
-                for(Role role : userGroup.getRoles()){
+                userGroup.getRoles().forEach(role -> {
                     result.addAll(role.getCommands());
-                }
+                });
             }
         }
         if(this.positions != null && !this.positions.isEmpty()) {
@@ -278,9 +281,9 @@ public class User extends SimpleModel  implements UserDetails{
                     }
                 }
                 //如果用户不是超级管理员则进行一下处理
-                for(Role role : userGroup.getRoles()){
+                userGroup.getRoles().forEach(role -> {
                     result.addAll(assemblyModule(role.getCommands()));
-                }
+                });
             }
         }
         if(this.positions != null && !this.positions.isEmpty()) {
@@ -301,8 +304,8 @@ public class User extends SimpleModel  implements UserDetails{
         if(commands==null) {
             return modules;
         }
-        
-        for(Command command : commands){
+
+        commands.forEach(command -> {
             if(command!=null){
                 Module module=command.getModule();
                 if(module!=null){
@@ -310,7 +313,7 @@ public class User extends SimpleModel  implements UserDetails{
                     assemblyModule(modules,module);
                 }
             }
-        }
+        });
         return modules;
     }
     private void assemblyModule(List<Module> modules,Module module){
@@ -324,9 +327,9 @@ public class User extends SimpleModel  implements UserDetails{
     }
     public String getAuthoritiesStr(){
         StringBuilder result=new StringBuilder();
-        for(GrantedAuthority auth : getAuthorities()){
+        getAuthorities().forEach(auth -> {
             result.append(auth.getAuthority()).append(",");
-        }
+        });
         return result.toString();
     }
     /**
@@ -355,14 +358,14 @@ public class User extends SimpleModel  implements UserDetails{
             }
             if(this.userGroups != null && !this.userGroups.isEmpty()){
                 LOG.debug("     userGroups:");
-                for(UserGroup userGroup : this.userGroups){
-                    for(Role role : userGroup.getRoles()){
-                        for (String priv : role.getAuthorities()) {
-                            LOG.debug(priv);
-                            grantedAuthArray.add(new SimpleGrantedAuthority(priv.toUpperCase()));
+                this.userGroups.forEach(userGroup -> {
+                    userGroup.getRoles().forEach(role -> {
+                        for (String privilege : role.getAuthorities()) {
+                            LOG.debug(privilege);
+                            grantedAuthArray.add(new SimpleGrantedAuthority(privilege.toUpperCase()));
                         }
-                    }
-                }
+                    });
+                });
             }        
             if(this.positions != null && !this.positions.isEmpty()) {
                 LOG.debug("     positions:");
@@ -375,6 +378,7 @@ public class User extends SimpleModel  implements UserDetails{
             }
         }
         if(grantedAuthArray.isEmpty()){
+            LOG.debug("don't have any privilege");
             return null;
         }
         grantedAuthArray.add(new SimpleGrantedAuthority("ROLE_MANAGER"));
@@ -432,10 +436,6 @@ public class User extends SimpleModel  implements UserDetails{
         return Collections.unmodifiableList(this.userGroups);
     }
 
-    public void setUserGroups(List<UserGroup> userGroups) {
-        this.userGroups = userGroups;
-    }
-
     public void addUserGroup(UserGroup userGroup) {
         this.userGroups.add(userGroup);
     }
@@ -444,7 +444,7 @@ public class User extends SimpleModel  implements UserDetails{
         this.userGroups.remove(userGroup);
     }
 
-    public void clearUserGroup() {
+    public void clearUserGroups() {
         this.userGroups.clear();
     }
 
@@ -461,7 +461,7 @@ public class User extends SimpleModel  implements UserDetails{
         this.roles.remove(role);
     }
 
-    public void clearRole() {
+    public void clearRoles() {
         this.roles.clear();
     }
     
@@ -479,7 +479,7 @@ public class User extends SimpleModel  implements UserDetails{
         this.positions.remove(position);
     }
 
-    public void clearPosition() {
+    public void clearPositions() {
         this.positions.clear();
     }
             

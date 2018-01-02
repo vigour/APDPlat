@@ -51,9 +51,9 @@ import org.apdplat.platform.annotation.ModelCollRef;
 import org.apdplat.platform.annotation.RenderDate;
 import org.apdplat.platform.annotation.RenderTime;
 import org.apdplat.platform.log.APDPlatLoggerFactory;
-import org.compass.annotations.SearchableComponent;
-import org.compass.annotations.SearchableId;
-import org.compass.annotations.SearchableProperty;
+import org.apdplat.platform.search.annotations.SearchableComponent;
+import org.apdplat.platform.search.annotations.SearchableId;
+import org.apdplat.platform.search.annotations.SearchableProperty;
 
 /**
  *
@@ -216,10 +216,10 @@ public abstract class Model implements Serializable{
                     LOG.debug("处理集合,字段为："+fieldName+",大小为："+collection.size());
                     if(collection.size() > 0){
                         StringBuilder str=new StringBuilder();
-                        for(Object object : collection){
+                        collection.forEach(object -> {
                             str.append(ReflectionUtils.getFieldValue(object, fieldRef).toString()).append(",");
-                        }
-                        str=str.deleteCharAt(str.length()-1);
+                        });
+                        str.setLength(str.length()-1);
                         value=str.toString();
                     }
                 }
